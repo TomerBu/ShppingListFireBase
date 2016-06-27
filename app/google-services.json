@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "895642210549",
+    "firebase_url": "https://shoppinglist-bfa81.firebaseio.com",
+    "project_id": "shoppinglist-bfa81",
+    "storage_bucket": "shoppinglist-bfa81.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:895642210549:android:7ab272d778e59786",
+        "android_client_info": {
+          "package_name": "tomerbu.edu.shppinglistfirebase"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "895642210549-06arbc8645fa97jkl6baa5ak5bgeivoj.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "tomerbu.edu.shppinglistfirebase",
+            "certificate_hash": "7A10AD770C6F4EC3BE4D27DFCD880B8519D9D87D"
+          }
+        },
+        {
+          "client_id": "895642210549-l32lc8a7vaan3lbu8r0lhmpa4n9q5s72.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBAkEYE5SbrrtK6vc3cuuWiYX-qlzuKYTE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "895642210549-l32lc8a7vaan3lbu8r0lhmpa4n9q5s72.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
