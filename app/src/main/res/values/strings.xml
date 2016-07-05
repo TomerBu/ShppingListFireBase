@@ -17,4 +17,16 @@
     </string>
     <string name="title_activity_login_activityss">Sign in</string>
     <string name="action_logout">Log Out</string>
+    <string name="share">Share</string>
+    <string name="invitation_title">Let\'s Use My App</string>
+    <string name="invitation_message">This is the best App Ever!!!</string>
+    <string name="invitation_deep_link">https://k23er.app.goo.gl/XktS</string>
+    <string name="invitation_custom_image">https://developer.android.com/images/ui/actionbar-shareaction.png</string>
+    <string name="invitation_cta">Do It</string>
+    <string name="invite">Invite</string>
+    <string name="title_activity_user_lists">UserListsActivity</string>
+    <string name="title_activity_shopping_list_items">ShoppingListItemsActivity</string>
+    <string name="action_share">Share</string>
+    <string name="action_edit_list_name">Edit List Name</string>
+    <string name="title_activity_freind_list">FreindListActivity</string>
 </resources>

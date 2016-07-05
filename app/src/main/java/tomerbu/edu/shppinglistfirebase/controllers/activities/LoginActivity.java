@@ -1,8 +1,9 @@
-package tomerbu.edu.shppinglistfirebase;
+package tomerbu.edu.shppinglistfirebase.controllers.activities;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -21,13 +22,24 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthInvalidUserException;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ServerValue;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+
+import tomerbu.edu.shppinglistfirebase.R;
+import tomerbu.edu.shppinglistfirebase.models.User;
 
 /**
  * A login screen that offers login via email/password.
@@ -42,11 +54,22 @@ public class LoginActivity extends AppCompatActivity {
     private View mLoginFormView;
     private String TAG = "TomerBu";
     private Button mEmailSignInButton;
+    private SharedPreferences prefs;
+    Button btnResetPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        btnResetPassword = (Button) findViewById(R.id.btnReset);
+        btnResetPassword.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                resetPassword();
+            }
+        });
+        prefs = getSharedPreferences("emails", MODE_PRIVATE);
         // Set up the login form.
         mEmailView = (AutoCompleteTextView) findViewById(R.id.email);
         populateAutoComplete();
@@ -77,10 +100,43 @@ public class LoginActivity extends AppCompatActivity {
         mProgressView = findViewById(R.id.login_progress);
     }
 
+    private void resetPassword() {
+        FirebaseAuth.getInstance().sendPasswordResetEmail(getEmail())
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Snackbar.make(btnResetPassword,
+                                e.getLocalizedMessage(),
+                                Snackbar.LENGTH_INDEFINITE).
+                                setAction("dismiss", new OnClickListener() {
+                                    @Override
+                                    public void onClick(View view) {
+                                    }
+                                });
+                    }
+                }).addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                Toast.makeText(LoginActivity.this,
+                        "Sent - Check your email...", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    @NonNull
+    private String getEmail() {
+        return mEmailView.getText().toString();
+    }
+
     private void populateAutoComplete() {
         ArrayList<String> emails = new ArrayList<>();
-        emails.add("Tomer.bu@gmail.com");
-        emails.add("tomer.bu@gmail.com");
+
+        Set<String> savedEmails = prefs.getStringSet("emails", null);
+        if (savedEmails != null) {
+            for (String email : savedEmails) {
+                emails.add(email);
+            }
+        }
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_dropdown_item_1line, emails);
         mEmailView.setAdapter(adapter);
     }
@@ -104,7 +160,7 @@ public class LoginActivity extends AppCompatActivity {
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String email = mEmailView.getText().toString();
+        String email = getEmail();
         String password = mPasswordView.getText().toString();
 
         boolean cancel = false;
@@ -137,19 +193,30 @@ public class LoginActivity extends AppCompatActivity {
             // perform the user login attempt.
             showProgress(true);
             loginOrSignUp(email, password);
-            //TODO: don't forget to enable the shouldAttemptAnotherLogin when the server returns an answer
+            saveEmailToPrefs();
         }
+    }
+
+    private void saveEmailToPrefs() {
+        Set<String> savedEmails = prefs.getStringSet("emails", null);
+        if (savedEmails == null)
+            savedEmails = new HashSet<>();
+        else savedEmails = new HashSet<>(savedEmails);//copy
+        //if the email is indeed new to the HashSet
+        //(otherwise it already exists in the set and avoided by the add operation)
+        if (savedEmails.add(getEmail()))
+            prefs.edit().putStringSet("emails", savedEmails).apply();
     }
 
     private void loginOrSignUp(final String email, final String password) {
         FirebaseAuth.getInstance().signInWithEmailAndPassword(email, password).
                 addOnSuccessListener(new OnSuccessListener<AuthResult>() {
-            @Override
-            public void onSuccess(AuthResult authResult) {
-                showProgress(false);
-                gotoHomeScreen();
-            }
-        }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onSuccess(AuthResult authResult) {
+                        showProgress(false);
+                        saveUserLoggedInGotoMain();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
                 if (e instanceof FirebaseAuthInvalidUserException) {
@@ -161,22 +228,63 @@ public class LoginActivity extends AppCompatActivity {
                     Snackbar.make(mEmailSignInButton, e.getLocalizedMessage(),
                             Snackbar.LENGTH_INDEFINITE).setAction("dismiss", new OnClickListener() {
                         @Override
-                        public void onClick(View view) {}
+                        public void onClick(View view) {
+                        }
                     }).show();
                 }
             }
         });
     }
 
-    private void gotoHomeScreen() {
-        startActivity(new Intent(this, MainActivity.class));
+    private void saveUserLoggedInGotoMain() {
+        saveUserData(true);
+        Intent intent = new Intent(this, UserListsActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        startActivity(intent);
+    }
+
+    private void saveUserData(boolean isLoggedIn) {
+        FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+        if (currentUser == null) return;
+        /**
+         * Encode user email replacing "." with "," to be able to use it
+         * as a Firebase db key
+         */
+        String email = currentUser.getEmail();
+
+        assert email != null;
+        String userName = email.split("@")[0];
+        assert userName != null;
+        String uid = currentUser.getUid();
+
+        String encEmail = email.replace(".", "_");
+
+        /* Make a user */
+        HashMap<String, Object> userAndUidMapping = new HashMap<String, Object>();
+
+        HashMap<String, Object> timeStamp = new HashMap<>();
+        timeStamp.put("lastLogin", ServerValue.TIMESTAMP);
+
+
+        /* Create a HashMap version of the user to add */
+        User newUser = new User(userName, email, timeStamp, isLoggedIn);
+
+        HashMap<String, Object> newUserMap = (HashMap<String, Object>)
+                new ObjectMapper().convertValue(newUser, Map.class);
+
+        /* Add the user and UID to the update map */
+        userAndUidMapping.put("/uidEmails/"
+                + uid, email);
+
+        /* Update the database; it will fail if a user already exists */
+        FirebaseDatabase.getInstance().getReference().updateChildren(userAndUidMapping);
     }
 
     private void signUpToFirebase(final String email, final String password) {
         FirebaseAuth.getInstance().createUserWithEmailAndPassword(email, password).addOnSuccessListener(new OnSuccessListener<AuthResult>() {
             @Override
             public void onSuccess(AuthResult authResult) {
-                gotoHomeScreen();
+                saveUserLoggedInGotoMain();
             }
         }).addOnFailureListener(new OnFailureListener() {
             @Override
