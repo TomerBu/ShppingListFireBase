@@ -12,7 +12,6 @@ import android.util.Log;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
-import tomerbu.edu.shppinglistfirebase.R;
 import tomerbu.edu.shppinglistfirebase.controllers.activities.UserListsActivity;
 
 /**
@@ -57,7 +56,7 @@ public class MyFirebaseMessagingService extends FirebaseMessagingService {
 
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.icon_add)
+                .setSmallIcon(android.R.drawable.ic_input_add)
                 .setContentTitle("FCM Message")
                 .setContentText(messageBody)
                 .setAutoCancel(true)

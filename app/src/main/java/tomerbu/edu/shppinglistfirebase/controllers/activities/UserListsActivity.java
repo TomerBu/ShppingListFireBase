@@ -84,10 +84,10 @@ public class UserListsActivity extends BaseActivity {
         timeStamp.put("lastLogin", ServerValue.TIMESTAMP);
 
         HashMap<String, Object> logOutMap =
-                new User(userName, email, timeStamp, false).toMap();
+                new User(userName, email,currentUser.getUid(), timeStamp, false).toMap();
 
         HashMap<String, Object> loginMap =
-                new User(userName, email, timeStamp, true).toMap();
+                new User(userName, email, currentUser.getUid(),timeStamp, true).toMap();
 
         /* Add the user and UID to the update map */
         updateMapLogin.put("/users/" + currentUser.getUid(),

@@ -267,7 +267,7 @@ public class LoginActivity extends AppCompatActivity {
 
 
         /* Create a HashMap version of the user to add */
-        User newUser = new User(userName, email, timeStamp, isLoggedIn);
+        User newUser = new User(userName, email,currentUser.getUid(), timeStamp, isLoggedIn);
 
         HashMap<String, Object> newUserMap = (HashMap<String, Object>)
                 new ObjectMapper().convertValue(newUser, Map.class);
