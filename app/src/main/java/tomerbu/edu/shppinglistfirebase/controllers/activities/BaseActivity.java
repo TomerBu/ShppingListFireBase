@@ -3,11 +3,17 @@ package tomerbu.edu.shppinglistfirebase.controllers.activities;
 import android.app.ProgressDialog;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import tomerbu.edu.shppinglistfirebase.R;
 
@@ -23,6 +29,29 @@ public class BaseActivity extends AppCompatActivity {
         }
 
         mProgressDialog.show();
+    }
+
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        DatabaseReference connectedRef = FirebaseDatabase.getInstance().getReference(".info/connected");
+        connectedRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot snapshot) {
+                boolean connected = snapshot.getValue(Boolean.class);
+                if (connected) {
+                    Log.e(TAG, "connected");
+                } else {
+                    Log.e(TAG, "not connected");
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError error) {
+                Log.e(TAG, "Listener was cancelled");
+            }
+        });
     }
 
     public void hideProgressDialog() {

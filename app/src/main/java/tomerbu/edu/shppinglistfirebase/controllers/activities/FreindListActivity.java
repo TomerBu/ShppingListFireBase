@@ -12,12 +12,13 @@ import com.google.firebase.database.FirebaseDatabase;
 
 import tomerbu.edu.shppinglistfirebase.R;
 import tomerbu.edu.shppinglistfirebase.adapters.FreindListRecyclerAdapter;
+import tomerbu.edu.shppinglistfirebase.models.ShoppingList;
 import tomerbu.edu.shppinglistfirebase.models.User;
 
 public class FreindListActivity extends BaseActivity {
     //public final static String EXREA_ADD_USER_TO_LIST = "addUserToList";
     private RecyclerView rvFreinds;
-    private String pid;
+    private ShoppingList shoppingList;
     private DatabaseReference ref;
 
     @Override
@@ -33,17 +34,19 @@ public class FreindListActivity extends BaseActivity {
         rvFreinds.setAdapter(new FreindListRecyclerAdapter(User.class, R.layout.lists_two, ref));
 
 
-        pid = getIntent().getStringExtra(ShoppingListItemsActivity.EXTRA_LIST_PID);
+        shoppingList = getIntent().getParcelableExtra(ShoppingListItemsActivity.EXTRA_SHOPPING_LIST);
 
-        if (pid != null) {
-           //Have the PID, can listen to all changes to user friends, this is not enough, need a list in the DB that will hold list titles without the actual items.
-        }
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startActivity(new Intent(getApplicationContext(), AllUsersActivity.class));
+                Intent intent = new Intent(getApplicationContext(), AllUsersActivity.class);
+                intent.putExtra(ShoppingListItemsActivity.EXTRA_SHOPPING_LIST, shoppingList);
+                User user = new User(getCurrentUser().getEmail(), getCurrentUser().getUid(), true);
+                intent.putExtra("User", user);
+                startActivity(intent);
             }
         });
     }

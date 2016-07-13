@@ -1,15 +1,16 @@
 package tomerbu.edu.shppinglistfirebase.models;
 
-import java.util.HashMap;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 /**
  * Defines the data structure for User objects.
  */
-public class User extends BaseModel{
+public class User extends BaseModel implements Parcelable {
     private String name;
     private String email;
     private String UID;
-    private HashMap<String, Object> timeStampLoggedIn;
+
 
     public void setLoggedIn(boolean loggedIn) {
         isLoggedIn = loggedIn;
@@ -25,47 +26,70 @@ public class User extends BaseModel{
     }
 
 
-    public User(String name, String email,String UID,  HashMap<String, Object> timeStampLoggedIn, boolean isLoggedIn) {
-        this.name = name;
+    public User(String email, String UID, boolean isLoggedIn) {
+        this.name = email.split("@")[0];
         this.email = email;
-        this.timeStampLoggedIn = timeStampLoggedIn;
         this.isLoggedIn = isLoggedIn;
         this.UID = UID;
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", timeStampLoggedIn=" + timeStampLoggedIn +
-                ", isLoggedIn=" + isLoggedIn +
-                '}';
     }
 
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getEmail() {
         return email;
     }
 
-    public HashMap<String, Object> getTimeStampLoggedIn() {
-        return timeStampLoggedIn;
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getUID() {
+        return UID;
+    }
+
+    public void setUID(String UID) {
+        this.UID = UID;
     }
 
     public boolean isLoggedIn() {
         return isLoggedIn;
     }
 
-
-    public void setUID(String UID) {
-        this.UID = UID;
+    @Override
+    public int describeContents() {
+        return 0;
     }
 
-    public String getUID() {
-        return UID;
-
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(this.name);
+        dest.writeString(this.email);
+        dest.writeString(this.UID);
+        dest.writeByte(this.isLoggedIn ? (byte) 1 : (byte) 0);
     }
+
+    protected User(Parcel in) {
+        this.name = in.readString();
+        this.email = in.readString();
+        this.UID = in.readString();
+        this.isLoggedIn = in.readByte() != 0;
+    }
+
+    public static final Parcelable.Creator<User> CREATOR = new Parcelable.Creator<User>() {
+        @Override
+        public User createFromParcel(Parcel source) {
+            return new User(source);
+        }
+
+        @Override
+        public User[] newArray(int size) {
+            return new User[size];
+        }
+    };
 }

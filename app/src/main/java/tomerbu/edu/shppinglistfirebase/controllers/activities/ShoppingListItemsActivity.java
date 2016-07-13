@@ -11,24 +11,23 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import tomerbu.edu.shppinglistfirebase.R;
 import tomerbu.edu.shppinglistfirebase.adapters.ShoppingListItemsRecyclerAdapter;
 import tomerbu.edu.shppinglistfirebase.controllers.fragments.AddListDialog;
+import tomerbu.edu.shppinglistfirebase.models.ShoppingList;
 import tomerbu.edu.shppinglistfirebase.models.ShoppingListItem;
 
 public class ShoppingListItemsActivity extends BaseActivity {
+    public static final String EXTRA_SHOPPING_LIST = "edu.tomerbu.shoppingList";
 
-    public static final String EXTRA_LIST_PID = "listPid";
     private RecyclerView recycler;
     private DatabaseReference ref;
     private ActionBar actionBar;
-    private String pid;
+    String uid;
+    private ShoppingList shoppingList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,21 +35,20 @@ public class ShoppingListItemsActivity extends BaseActivity {
         setContentView(R.layout.activity_shopping_list_items);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         actionBar = getSupportActionBar();
+
+        shoppingList = getIntent().getParcelableExtra(EXTRA_SHOPPING_LIST);
+        uid = shoppingList.getUID();
+
+        assert shoppingList != null && actionBar != null;
+
 
         recycler = (RecyclerView) findViewById(R.id.shoppingListItemsRecycler);
 
+        ref = FirebaseDatabase.getInstance().getReference("shoppingListItems/").child(uid).child("items");
 
-        pid = getIntent().getStringExtra(EXTRA_LIST_PID);
-        ref = FirebaseDatabase.getInstance().getReference("shoppingListItems/").child(pid).child("items");
-
-
-        if (actionBar != null) {
-            actionBar.setTitle("");
-            setListTitle();
-
-        }
+        actionBar.setTitle("");
+        setListTitle();
 
 
         recycler.setAdapter(new ShoppingListItemsRecyclerAdapter(ShoppingListItem.class, R.layout.shopping_list_item, ref));
@@ -71,19 +69,7 @@ public class ShoppingListItemsActivity extends BaseActivity {
 
     private void setListTitle() {
         if (actionBar != null && ref != null) {
-
-            ref.getParent().child("listName").addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    String value = dataSnapshot.getValue(String.class);
-                    actionBar.setTitle(value);
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
+            actionBar.setTitle(shoppingList.getListName());
         }
     }
 
@@ -113,7 +99,8 @@ public class ShoppingListItemsActivity extends BaseActivity {
 
     private void shareList() {
         Intent intent = new Intent(this, FreindListActivity.class);
-        intent.putExtra(EXTRA_LIST_PID, pid);
+        intent.putExtra(EXTRA_SHOPPING_LIST, shoppingList);
+
         startActivity(intent);
     }
 }

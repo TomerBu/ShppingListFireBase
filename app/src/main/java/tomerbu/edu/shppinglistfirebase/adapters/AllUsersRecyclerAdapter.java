@@ -1,18 +1,14 @@
 package tomerbu.edu.shppinglistfirebase.adapters;
 
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
 
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 
 import tomerbu.edu.shppinglistfirebase.R;
-import tomerbu.edu.shppinglistfirebase.controllers.activities.FreindListActivity;
 import tomerbu.edu.shppinglistfirebase.models.User;
 
 /**
@@ -26,7 +22,7 @@ import tomerbu.edu.shppinglistfirebase.models.User;
 public class AllUsersRecyclerAdapter extends FirebaseRecyclerAdapter<User, AllUsersRecyclerAdapter.AllUsersViewHolder> {
 
 
-
+    private OnUserAddedAsFriendListener listener;
 
     public AllUsersRecyclerAdapter(Class<User> modelClass, int modelLayout, Query ref) {
         super(modelClass, modelLayout, AllUsersViewHolder.class, ref);
@@ -43,16 +39,16 @@ public class AllUsersRecyclerAdapter extends FirebaseRecyclerAdapter<User, AllUs
             @Override
             public void onClick(View view) {
                 String key = getRef(position).getKey();
-
-                DatabaseReference userFriendsRef = FirebaseDatabase.getInstance().getReference().child("userFriends").child(FirebaseAuth.getInstance().getCurrentUser().getUid());
-                userFriendsRef.child(key).setValue(model);
-                Intent intent = new Intent(view.getContext(), FreindListActivity.class);
-                view.getContext().startActivity(intent);
-
+                if (listener!=null)
+                    listener.onUserAddedAsFreind(model, key);
             }
         });
     }
 
+    public void setOnUserAddedAsFriendListener(OnUserAddedAsFriendListener listener){this.listener = listener;}
+    public interface OnUserAddedAsFriendListener{
+        public void onUserAddedAsFreind(User user, String key);
+    }
     public static class AllUsersViewHolder extends RecyclerView.ViewHolder {
         private TextView tvTitle;
 

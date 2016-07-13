@@ -15,6 +15,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.database.ServerValue;
 
 import java.util.HashMap;
@@ -28,6 +29,9 @@ import tomerbu.edu.shppinglistfirebase.models.User;
 
 public class UserListsActivity extends BaseActivity {
     private RecyclerView rvUserLists;
+    /**
+     * firebase.getInstance()...
+     */
     private DatabaseReference ref;
     private FirebaseUser currentUser;
 
@@ -62,7 +66,7 @@ public class UserListsActivity extends BaseActivity {
         });
 
 
-        initFab();
+        handleFab();
 
 
     }
@@ -73,8 +77,6 @@ public class UserListsActivity extends BaseActivity {
         if (currentUser == null || currentUser.getEmail() == null) return;
 
         String email = currentUser.getEmail();
-        String userName = email.split("@")[0];
-
 
         /* Create HashMaps of a connected/disconnected user */
         HashMap<String, Object> updateMapLogin = new HashMap<String, Object>();
@@ -84,10 +86,10 @@ public class UserListsActivity extends BaseActivity {
         timeStamp.put("lastLogin", ServerValue.TIMESTAMP);
 
         HashMap<String, Object> logOutMap =
-                new User(userName, email,currentUser.getUid(), timeStamp, false).toMap();
+                new User( email, currentUser.getUid(), false).toMap();
 
         HashMap<String, Object> loginMap =
-                new User(userName, email, currentUser.getUid(),timeStamp, true).toMap();
+                new User(email, currentUser.getUid(), true).toMap();
 
         /* Add the user and UID to the update map */
         updateMapLogin.put("/users/" + currentUser.getUid(),
@@ -103,7 +105,7 @@ public class UserListsActivity extends BaseActivity {
                 onDisconnect().updateChildren(updateMapLogout);
     }
 
-    private void initFab() {
+    private void handleFab() {
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -119,18 +121,7 @@ public class UserListsActivity extends BaseActivity {
                 addListDialog.setDelegate(new AddListDialog.OnSaveClicked() {
                     @Override
                     public void onSaveClicked(String title) {
-                        HashMap<String, Object> newListMap = new ShoppingList(currentUser.getEmail(), title).toMap();
-                        Log.e(TAG, newListMap.toString()
-                        );
-                        String key = ref.child("userLists").child(currentUser.getUid()).push().getKey();
-
-                        Map<String, Object> childUpdateMap = new HashMap<String, Object>();
-
-                        childUpdateMap.put("userLists/" + currentUser.getUid() + "/" + key, newListMap);
-                        childUpdateMap.put("shoppingListItems/" + key + "/", newListMap);
-
-
-                        ref.updateChildren(childUpdateMap);
+                        addListToFirebase(title);
 
                     }
                 });
@@ -139,10 +130,42 @@ public class UserListsActivity extends BaseActivity {
         });
     }
 
-    private void initRecycler() {
-        rvUserLists = (RecyclerView) findViewById(R.id.recyclerUserLists);
-        rvUserLists.setAdapter(new ShoppingListsAdapter(ShoppingList.class, R.layout.lists_one, ref.child("userLists").child(currentUser.getUid()).orderByChild("listName")));
+    private void addListToFirebase(String title) {
+        String key = ref.child("userLists").child(currentUser.getUid()).push().getKey();
+
+        HashMap<String, Object> newListMap = new ShoppingList(currentUser.getEmail(), title, key).toMap();
+        Log.e(TAG, newListMap.toString()
+        );
+
+        Map<String, Object> childUpdateMap = new HashMap<String, Object>();
+
+        childUpdateMap.put("userLists/" + currentUser.getUid() + "/" + key, newListMap);
+        childUpdateMap.put("shoppingListItems/" + key + "/", newListMap);
+        childUpdateMap.put("shoppingLists/" + key + "/", newListMap);
+
+
+        ref.updateChildren(childUpdateMap);
     }
 
+    private void initRecycler() {
+        rvUserLists = (RecyclerView) findViewById(R.id.recyclerUserLists);
 
+        Query rvQuery = ref.child("userLists").
+                child(currentUser.getUid()).
+                orderByChild("listName");
+
+        ShoppingListsAdapter adapter = new ShoppingListsAdapter(
+                ShoppingList.class, R.layout.lists_one, rvQuery
+        );
+
+        adapter.setOnItemClickListener(new ShoppingListsAdapter.OnItemClickListener() {
+            @Override
+            public void onItemClicked(ShoppingList model, String key) {
+                Intent intent = new Intent(UserListsActivity.this, ShoppingListItemsActivity.class);
+                intent.putExtra(ShoppingListItemsActivity.EXTRA_SHOPPING_LIST, model);
+                startActivity(intent);
+            }
+        });
+        rvUserLists.setAdapter(adapter);
+    }
 }

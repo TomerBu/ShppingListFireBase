@@ -22,7 +22,6 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.AuthResult;
@@ -35,7 +34,6 @@ import com.google.firebase.database.ServerValue;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import tomerbu.edu.shppinglistfirebase.R;
@@ -267,10 +265,9 @@ public class LoginActivity extends AppCompatActivity {
 
 
         /* Create a HashMap version of the user to add */
-        User newUser = new User(userName, email,currentUser.getUid(), timeStamp, isLoggedIn);
+        User newUser = new User(email,currentUser.getUid(),  isLoggedIn);
 
-        HashMap<String, Object> newUserMap = (HashMap<String, Object>)
-                new ObjectMapper().convertValue(newUser, Map.class);
+        HashMap<String, Object> newUserMap = newUser.toMap();
 
         /* Add the user and UID to the update map */
         userAndUidMapping.put("/uidEmails/"
@@ -343,7 +340,5 @@ public class LoginActivity extends AppCompatActivity {
             mLoginFormView.setVisibility(show ? View.GONE : View.VISIBLE);
         }
     }
-
-
 }
 

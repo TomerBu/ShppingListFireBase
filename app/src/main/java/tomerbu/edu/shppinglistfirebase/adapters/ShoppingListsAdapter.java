@@ -1,6 +1,5 @@
 package tomerbu.edu.shppinglistfirebase.adapters;
 
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.TextView;
@@ -10,7 +9,6 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 
 import tomerbu.edu.shppinglistfirebase.R;
-import tomerbu.edu.shppinglistfirebase.controllers.activities.ShoppingListItemsActivity;
 import tomerbu.edu.shppinglistfirebase.models.ShoppingList;
 
 /**
@@ -22,44 +20,49 @@ import tomerbu.edu.shppinglistfirebase.models.ShoppingList;
  * in compliance with the License
  */
 public class ShoppingListsAdapter extends FirebaseRecyclerAdapter<ShoppingList, ShoppingListsAdapter.ShopListsViewHolder> {
-
-    public ShoppingListsAdapter(Class<ShoppingList> modelClass, int modelLayout, DatabaseReference ref) {
-        super(modelClass, modelLayout, ShopListsViewHolder.class, ref);
-    }
+    private OnItemClickListener listener;
 
     public ShoppingListsAdapter(Class<ShoppingList> modelClass, int modelLayout, Query ref) {
         super(modelClass, modelLayout, ShopListsViewHolder.class, ref);
-        if (getItemCount() == 0) {}//no lists yet
+        if (getItemCount() == 0) {
+        }//no lists yet
     }
 
-        @Override
-        protected void populateViewHolder (ShopListsViewHolder holder, ShoppingList model,
-        final int position){
-            holder.use(model);
-            holder.itemView.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    final DatabaseReference ref = getRef(position);
-                    String key = ref.getKey();
-
-                    Intent intent = new Intent(view.getContext(), ShoppingListItemsActivity.class);
-                    intent.putExtra(ShoppingListItemsActivity.EXTRA_LIST_PID, key);
-                    view.getContext().startActivity(intent);
+    @Override
+    protected void populateViewHolder(ShopListsViewHolder holder, final ShoppingList model,
+                                      final int position) {
+        holder.use(model);
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final DatabaseReference ref = getRef(position);
+                String key = ref.getKey();
+                if (listener!=null){
+                    listener.onItemClicked(model, key);
                 }
-            });
+            }
+        });
+    }
+
+    public static class ShopListsViewHolder extends RecyclerView.ViewHolder {
+        private TextView tvListName;
+
+        public ShopListsViewHolder(View itemView) {
+            super(itemView);
+            tvListName = (TextView) itemView.findViewById(R.id.listName);
         }
 
-        public static class ShopListsViewHolder extends RecyclerView.ViewHolder {
-            private TextView tvListName;
 
-            public ShopListsViewHolder(View itemView) {
-                super(itemView);
-                tvListName = (TextView) itemView.findViewById(R.id.listName);
-            }
-
-
-            public void use(ShoppingList model) {
-                tvListName.setText(model.getListName());
-            }
+        public void use(ShoppingList model) {
+            tvListName.setText(model.getListName());
         }
     }
+
+    public void setOnItemClickListener(OnItemClickListener listener){
+        this.listener = listener;
+    }
+    public interface OnItemClickListener {
+        public void onItemClicked(ShoppingList model, String key);
+
+    }
+}
